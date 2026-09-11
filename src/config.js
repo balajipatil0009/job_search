@@ -18,6 +18,42 @@ function list(value, fallback) {
     .filter(Boolean);
 }
 
+function jsonMap(value, fallback) {
+  if (value === undefined || value === "") return fallback;
+  try {
+    const parsed = JSON.parse(String(value));
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+  } catch {
+    // fall through to fallback
+  }
+  return fallback;
+}
+
+const DEFAULT_ROLE_KEYWORDS = {
+  fullstack:
+    "full stack,fullstack,mern,mean,frontend,backend,react,node,node.js,javascript,typescript,next.js,express,nestjs,mongodb",
+  devops:
+    "devops,sre,site reliability,platform engineer,cloud engineer,kubernetes,docker,jenkins,terraform,ansible,ci/cd,aws,azure,gcp,prometheus,grafana",
+  "tech-support":
+    "technical support,tech support,it support,helpdesk,help desk,service desk,desktop support,support engineer,noc,system administrator",
+  analyst:
+    "data analyst,business analyst,bi analyst,mis executive,reporting analyst,power bi,tableau,sql analyst,product analyst,operations analyst",
+  "customer-support":
+    "customer support,customer care,customer service,voice process,non-voice,chat support,email support,bpo,call center,csr,customer success",
+};
+
+function slugEnv(slug) {
+  return `ROLE_${slug.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_KEYWORDS`;
+}
+
+function buildRoleKeywords() {
+  const out = {};
+  for (const [slug, fallback] of Object.entries(DEFAULT_ROLE_KEYWORDS)) {
+    out[slug] = list(process.env[slugEnv(slug)], fallback).map((s) => s.toLowerCase());
+  }
+  return out;
+}
+
 export const config = {
   telegramToken: process.env.TELEGRAM_BOT_TOKEN?.trim() || "",
   telegramChatId: process.env.TELEGRAM_CHAT_ID?.trim() || "",
@@ -42,7 +78,7 @@ export const config = {
 
   seniorityBlocklist: list(
     process.env.SENIORITY_BLOCKLIST,
-    "lead,architect,principal,manager,director,head,vp",
+    "senior,sr,staff,lead,architect,principal,manager,director,head,vp",
   ).map((s) => s.toLowerCase()),
   typeAllowlist: list(
     process.env.TYPE_ALLOWLIST,
@@ -57,6 +93,7 @@ export const config = {
 
   pollMinutes: num(process.env.POLL_INTERVAL_MINUTES, 30),
   maxPerRun: num(process.env.MAX_JOBS_PER_RUN, 8),
+  maxPerRole: num(process.env.MAX_PER_ROLE, 4),
   fresherShare: num(process.env.FRESHER_SHARE, 0.5),
   messageDelayMs: num(process.env.MESSAGE_DELAY_MS, 2500),
   maxSendRetries: num(process.env.MAX_SEND_RETRIES, 3),
@@ -72,6 +109,11 @@ export const config = {
     appKey: process.env.ADZUNA_APP_KEY?.trim() || "",
     country: process.env.ADZUNA_COUNTRY?.trim() || "in",
   },
+
+  // Role -> Telegram chat map, e.g. {"fullstack":"@grp1","devops":"@grp2"}.
+  // Empty = legacy single-chat mode using TELEGRAM_CHAT_ID.
+  roleGroups: jsonMap(process.env.ROLE_GROUPS, {}),
+  roleKeywords: buildRoleKeywords(),
 
   once: false,
   dryRun: false,
