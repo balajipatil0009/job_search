@@ -115,8 +115,35 @@ function parseHimalayasText(text) {
 
 /** Himalayas remote jobs (no API key needed). */
 export async function fetchHimalayas(cfg) {
-  const keywords =
-    cfg.himalayasMaxKeywords > 0 ? cfg.keywords.slice(0, cfg.himalayasMaxKeywords) : cfg.keywords;
+  // Multi-group mode: search one representative term per role so support /
+  // analyst / ai-ml get coverage (legacy cfg.keywords is dev-only).
+  // Single-chat mode: legacy behavior.
+  let keywords;
+  const roleSlugs = Object.keys(cfg.roleKeywords || {});
+  if (roleSlugs.length) {
+    const perRole = {
+      fullstack: ["fullstack", "frontend"],
+      devops: ["devops", "sre"],
+      "tech-support": ["technical support", "customer support"],
+      analyst: ["data analyst", "business analyst"],
+      "ai-ml": ["machine learning", "data scientist"],
+    };
+    keywords = [];
+    for (const slug of roleSlugs) {
+      for (const k of perRole[slug] || []) {
+        if (!keywords.includes(k)) keywords.push(k);
+      }
+    }
+    // Allow ROLE_*_KEYWORDS overrides to contribute their first term too.
+    for (const slug of roleSlugs) {
+      const first = (cfg.roleKeywords[slug] || [])[0];
+      if (first && !keywords.includes(first)) keywords.push(first);
+    }
+  } else {
+    keywords =
+      cfg.himalayasMaxKeywords > 0 ? cfg.keywords.slice(0, cfg.himalayasMaxKeywords) : cfg.keywords;
+  }
+  if (cfg.himalayasMaxKeywords > 0) keywords = keywords.slice(0, cfg.himalayasMaxKeywords);
   const all = [];
   for (const keyword of keywords) {
     try {

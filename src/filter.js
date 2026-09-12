@@ -4,28 +4,64 @@ const TECH_SIGNAL =
   /(developer|engineer|software|programmer|mern|stack|frontend|front[\s-]?end|backend|back[\s-]?end|full[\s-]?stack|react|node|javascript|typescript|python|java|golang|flutter|android|ios|devops|cloud)\b/i;
 
 // Per-role gate for level-only matches (fresher/junior/intern word alone).
-// Dev roles reuse TECH_SIGNAL; support/analyst roles need their own signal
-// or those jobs would be dropped by the shared gate.
+// Each signal requires role-specific context — a bare "engineer" or
+// "support" must NOT match, or Junior GTM/Network Engineers leak into
+// the wrong channels.
 const ROLE_SIGNALS = {
   fullstack:
-    /(developer|engineer|software|programmer|mern|mean|stack|frontend|front[\s-]?end|backend|back[\s-]?end|full[\s-]?stack|react|node|javascript|typescript|next|express|mongodb)\b/i,
+    /(software|developer|programmer|mern|mean|full[\s-]?stack|frontend|front[\s-]?end|backend|back[\s-]?end|react|node|javascript|typescript|next|express|nestjs|mongodb)\b/i,
   devops:
-    /(devops|sre|platform|cloud|kubernetes|docker|jenkins|terraform|ansible|aws|azure|gcp|ci\/?cd|prometheus|grafana|reliability)\b/i,
+    /(devops|devsecops|sre|kubernetes|docker|jenkins|terraform|ansible|ci\/?cd|prometheus|grafana|reliability|infrastructure[\s-]?as[\s-]?code|platform[\s-]?engineer|cloud[\s-]?engineer)\b/i,
   "tech-support":
-    /(support|helpdesk|help[\s-]?desk|service[\s-]?desk|desktop|noc|sysadmin|system administrator|network|technician)\b/i,
+    /(technical[\s-]?support|tech[\s-]?support|it[\s-]?support|helpdesk|help[\s-]?desk|service[\s-]?desk|desktop[\s-]?support|support[\s-]?engineer|support[\s-]?specialist|support[\s-]?executive|support[\s-]?representative|voice|chat[\s-]?support|email[\s-]?support|\bbpo\b|call[\s-]?cent(er|re)|\bcsr\b|customer[\s-]?success|client[\s-]?support|noc|sysadmin|system[\s-]?administrator|technician)\b/i,
   analyst:
-    /(analyst|analytics|power[\s-]?bi|tableau|sql|excel|mis|reporting|business intelligence|\bbi\b|dashboard)\b/i,
-  "customer-support":
-    /(customer|support|voice|non[\s-]?voice|chat|bpo|call[\s-]?cent(er|re)|csr|client support|customer success|helpdesk)\b/i,
+    /(analyst|analytics|data[\s-]?scien(ce|tist)|data[\s-]?engineer|power[\s-]?bi|tableau|\bsql\b|excel|\bmis\b|reporting|business[\s-]?intelligence|\bbi\b|dashboard)\b/i,
+  "ai-ml":
+    /(machine[\s-]?learning|\bml\b|\bai\b|data[\s-]?scien(ce|tist)|deep[\s-]?learning|\bnlp\b|\bllm\b|genai|generative[\s-]?ai|computer[\s-]?vision|pytorch|tensorflow|hugging[\s-]?face|langchain|mlops|artificial[\s-]?intelligence|ai[\s-]?engineer)\b/i,
 };
+
+// Non-English-language postings are out of scope for the India feed.
+const LANG_NEGATIVES = [/\bgerman\b/i, /\bfrench\b/i, /\bdutch\b/i, /\bspanish\b/i];
 
 // Negative hints to reduce cross-role bleed when fanning out.
 const ROLE_NEGATIVES = {
-  fullstack: [/\bsenior\b/i, /\blead\b/i],
-  devops: [/\bhelpdesk\b/i, /\bcall center\b/i, /\bbpo\b/i],
-  "tech-support": [/\bkubernetes\b/i, /\bterraform\b/i],
-  analyst: [/\bcall center\b/i, /\bbpo\b/i],
-  "customer-support": [/\bkubernetes\b/i, /\bterraform\b/i, /\bmern\b/i, /\breact\b.*\bnode\b/i],
+  fullstack: [
+    /\bsenior\b/i,
+    /\blead\b/i,
+    /\bgtm\b/i,
+    /\bsales\b/i,
+    /\bhelpdesk\b/i,
+    /\bpanel\b/i,
+    /\bbpo\b/i,
+    /\bvoice[\s-]?process\b/i,
+    /\bcall[\s-]?cent(er|re)\b/i,
+    ...LANG_NEGATIVES,
+  ],
+  devops: [
+    /\bhelpdesk\b/i,
+    /\bcall[\s-]?cent(er|re)\b/i,
+    /\bbpo\b/i,
+    /\bsupport[\s-]?engineer\b/i,
+    /\bsupport[\s-]?specialist\b/i,
+    /\bdata (analyst|engineer|scientist)\b/i,
+    ...LANG_NEGATIVES,
+  ],
+  "tech-support": [
+    /\bkubernetes\b/i,
+    /\bterraform\b/i,
+    /\bmern\b/i,
+    /\bdata (analyst|engineer|scientist)\b/i,
+    /\bmachine[\s-]?learning\b/i,
+    ...LANG_NEGATIVES,
+  ],
+  analyst: [/\bcall[\s-]?cent(er|re)\b/i, /\bbpo\b/i, /\bvoice[\s-]?process\b/i, ...LANG_NEGATIVES],
+  "ai-ml": [
+    /\bhelpdesk\b/i,
+    /\bcall[\s-]?cent(er|re)\b/i,
+    /\bbpo\b/i,
+    /\bvoice[\s-]?process\b/i,
+    ...LANG_NEGATIVES,
+  ],
 };
 
 export function keywordMatch(job, keywords, matchDescription = false, levelKeywords = []) {

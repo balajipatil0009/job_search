@@ -31,15 +31,15 @@ function jsonMap(value, fallback) {
 
 const DEFAULT_ROLE_KEYWORDS = {
   fullstack:
-    "full stack,fullstack,mern,mean,frontend,backend,react,node,node.js,javascript,typescript,next.js,express,nestjs,mongodb",
+    "full stack,fullstack,mern,mean,frontend,backend,react,node,node.js,javascript,typescript,next.js,express,nestjs,mongodb,software engineer,software developer",
   devops:
-    "devops,sre,site reliability,platform engineer,cloud engineer,kubernetes,docker,jenkins,terraform,ansible,ci/cd,aws,azure,gcp,prometheus,grafana",
+    "devops,devsecops,sre,site reliability,platform engineer,cloud engineer,kubernetes,docker,jenkins,terraform,ansible,ci/cd,aws,azure,gcp,prometheus,grafana",
   "tech-support":
-    "technical support,tech support,it support,helpdesk,help desk,service desk,desktop support,support engineer,noc,system administrator",
+    "technical support,tech support,it support,helpdesk,help desk,service desk,desktop support,support engineer,support specialist,support executive,support representative,noc,system administrator,customer support,customer care,customer service,voice process,non-voice,chat support,email support,bpo,call center,call centre,csr,customer success,client support",
   analyst:
-    "data analyst,business analyst,bi analyst,mis executive,reporting analyst,power bi,tableau,sql analyst,product analyst,operations analyst",
-  "customer-support":
-    "customer support,customer care,customer service,voice process,non-voice,chat support,email support,bpo,call center,csr,customer success",
+    "data analyst,data engineer,data scientist,data science,business analyst,bi analyst,mis executive,reporting analyst,power bi,tableau,sql analyst,product analyst,operations analyst",
+  "ai-ml":
+    "machine learning,ml engineer,data scientist,data science,deep learning,nlp,llm,genai,generative ai,computer vision,pytorch,tensorflow,hugging face,langchain,mlops,ai engineer,artificial intelligence",
 };
 
 function slugEnv(slug) {
